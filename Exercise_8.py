@@ -74,3 +74,57 @@ def python_repl_tool(
     except BaseException as e:
         return f"Failed to execute. Error: {repr(e)}"
     return f"Successfully executed the Python REPL tool.\n\nPython code executed:\n\`\`\`python\n{code}\n\`\`\`\n\nCode output:\n\`\`\`\n{result}\`\`\`"
+
+from langchain_openai import ChatOpenAI
+from langgraph_swarm import create_handoff_tool
+
+llm = ChatOpenAI(model="gpt-4o-mini")
+
+# Create a handoff tool for analyst -> researcher
+transfer_to_researcher = create_handoff_tool(
+    agent_name="researcher",
+    description="Transfer user to the researcher assistant, who can retrieve Wikipedia summaries or load stock performance data from CSV files.",
+)
+
+# Create a handoff tool for researcher -> analyst
+transfer_to_analyst = create_handoff_tool(
+    agent_name="analyst",
+    description="Transfer user to the analyst assistant, who can create visualizations of provided data.",
+)
+
+from langgraph.prebuilt import create_react_agent
+
+# Create a researcher agent with access to two tools + the handoff tool
+research_agent = create_react_agent(
+    llm,
+    tools=[wikipedia_tool, stock_data_tool, transfer_to_analyst],
+    prompt="You provide summaries from Wikipedia, and can load raw, numerical stock performance data from CSV files.",
+    name="researcher"
+)
+
+# Create a analyst agent with access to one tool + the handoff tool
+analyst_agent = create_react_agent(
+    llm,
+    [python_repl_tool, transfer_to_researcher],
+    prompt="You generate plots of stock performance data provided by another assistant.",
+    name="analyst"
+)
+
+from langgraph_swarm import create_swarm
+from langgraph.checkpoint.memory import InMemorySaver
+
+config = {"configurable": {"thread_id": "1", "user_id": "1"}}
+checkpointer = InMemorySaver()
+
+# Create the swarm multi-agent graph and compile it
+swarm = create_swarm(
+    agents=[research_agent, analyst_agent],
+    default_active_agent="researcher"
+).compile(checkpointer=checkpointer)
+
+from course_helper_functions import pretty_print_messages
+
+for chunk in swarm.stream(
+    {"messages": [{"role": "user", "content": "Who is Apple's CEO?"}]}, config
+):
+    pretty_print_messages(chunk)
