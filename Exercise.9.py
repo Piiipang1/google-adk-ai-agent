@@ -74,3 +74,36 @@ def python_repl_tool(
     except BaseException as e:
         return f"Failed to execute. Error: {repr(e)}"
     return f"Successfully executed the Python REPL tool.\n\nPython code executed:\n\`\`\`python\n{code}\n\`\`\`\n\nCode output:\n\`\`\`\n{result}\`\`\`"
+
+from langchain_openai import ChatOpenAI
+from langgraph.prebuilt import create_react_agent
+
+llm = ChatOpenAI(model="gpt-4o-mini")
+
+# Research agent
+research_agent = create_react_agent(
+    llm,
+    tools=[wikipedia_tool, stock_data_tool],
+    prompt=(
+        "You are a research agent.\n\n"
+        "INSTRUCTIONS:\n"
+        "- Assist ONLY with research-related tasks, including looking-up factual information and stock data. DO NOT write any code.\n"
+        "- After you're done with your tasks, respond to the supervisor directly\n"
+        "- Respond ONLY with the results of your work, do NOT include ANY other text."
+    ),
+    name="researcher"
+)
+
+# Analyst agent
+analyst_agent = create_react_agent(
+    llm,
+    [python_repl_tool],
+    prompt=(
+        "You are an agent that can run arbitrary Python code.\n\n"
+        "INSTRUCTIONS:\n"
+        "- Assist ONLY with tasks that require running code to produce an output.\n"
+        "- After you're done with your tasks, respond to the supervisor directly\n"
+        "- Respond ONLY with the results of your work, do NOT include ANY other text."
+    ),
+    name="analyst"
+)
