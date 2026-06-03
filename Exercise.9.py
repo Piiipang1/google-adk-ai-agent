@@ -107,3 +107,23 @@ analyst_agent = create_react_agent(
     ),
     name="analyst"
 )
+
+from langgraph_supervisor import create_supervisor
+from langgraph.checkpoint.memory import InMemorySaver
+
+config = {"configurable": {"thread_id": "1", "user_id": "1"}}
+checkpointer = InMemorySaver()
+
+supervisor = create_supervisor(
+    model=llm,
+    agents=[research_agent, analyst_agent],
+    prompt=(
+        "You are a supervisor managing two agents:\n"
+        "- a research agent. Assign research and data collection tasks to this agent\n"
+        "- an analyst agent. Assign the creation of visualizations via code to this agent\n"
+        "Assign work to one agent at a time, do not call agents in parallel.\n"
+        "Do not do any work yourself."
+    ),
+    add_handoff_back_messages=True,
+    output_mode="full_history",
+).compile(checkpointer=checkpointer)
