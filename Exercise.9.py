@@ -127,3 +127,10 @@ supervisor = create_supervisor(
     add_handoff_back_messages=True,
     output_mode="full_history",
 ).compile(checkpointer=checkpointer)
+
+from course_helper_functions import pretty_print_messages
+
+for chunk in supervisor.stream(
+    {"messages": [{"role": "user", "content": "Who is Apple's CEO?"}]}, config
+):
+    pretty_print_messages(chunk)
