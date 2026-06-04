@@ -1,3 +1,2 @@
-# google-adk-ai-agent
-AI agent project built using Google Agent Development Kit (ADK). Demonstrates agent creation, tool integration, task execution, and workflow automation through hands-on exercises from DataCamp's Google ADK course.
-This repository contains my exercises and projects from the DataCamp course "Building AI Agents with Google ADK." It explores the fundamentals of AI agents, tool calling, task orchestration, and practical agent development using Google's ADK framework.
+# langgraph-multi-agent-system
+This repository contains my work from the DataCamp course "Multi-Agent Systems with LangGraph." The project demonstrates how multiple AI agents can collaborate, communicate, and solve tasks efficiently through structured workflows and stateful interactions.
